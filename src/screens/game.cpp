@@ -4,13 +4,6 @@
 
 Game::Game() {
     SDL_Log("Starting game...");
-
-    this->theSunlightFont = TTF_OpenFont("./assets/fonts/The Sunlight.otf", 40);
-    if (!theSunlightFont) {
-        SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load font: %s", TTF_GetError());
-        return;
-    }
-
     this->gameBoardTotalCols = this->gameBoardTotalRows = 34;
 
     this->snake = new Snake(this->gameBoardTotalCols, this->gameBoardTotalRows);
@@ -118,13 +111,10 @@ void Game::render(const Context& context) {
     SDL_SetRenderDrawColor(context.renderer, 84, 116, 54, 255);
     SDL_RenderFillRect(context.renderer, &header);
 
-    // score
-    SDL_Color scoreColor = {255, 255, 255};  // White
-    std::string scoreStr = "Score: " + std::to_string(this->score);
-    SDL_Surface* scoreSurface = TTF_RenderText_Solid(this->theSunlightFont, scoreStr.c_str(), scoreColor);
-    SDL_Texture* ScoreTexture = SDL_CreateTextureFromSurface(context.renderer, scoreSurface);
-    SDL_Rect score = {padding, headerHeight / 3, scoreSurface->w, scoreSurface->h};
-    SDL_RenderCopy(context.renderer, ScoreTexture, NULL, &score);
+    // score Text
+    this->setFont("./assets/fonts/The Sunlight.otf", 40);
+    this->renderText(
+        "Score: " + std::to_string(this->score), padding, headerHeight / 3, {255, 255, 255}, context.renderer);
 
     // the background color of the game
     SDL_Rect background = {0, headerHeight, windowWidth, windowHeight - headerHeight};

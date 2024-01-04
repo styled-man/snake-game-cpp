@@ -13,8 +13,6 @@ private:
     float interval;
     int gameBoardTotalCols, gameBoardTotalRows;
 
-    TTF_Font *theSunlightFont;
-
     Snake *snake;
     Fruit *fruit;
 

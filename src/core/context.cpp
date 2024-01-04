@@ -38,7 +38,10 @@ Context::~Context() {
     SDL_Log("Window destroyed");
 
     SDL_DestroyRenderer(this->renderer);
-    SDL_Log("Window destroyed");
+    SDL_Log("Renderer destroyed");
+
+    TTF_Quit();
+    SDL_Log("Fonts Closed");
 
     SDL_Quit();
     SDL_Log("Clean up Done!");

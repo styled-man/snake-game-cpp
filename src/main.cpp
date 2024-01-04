@@ -1,5 +1,6 @@
 #include <iostream>
 #include <screens/game.hpp>
+#include <screens/main_menu.hpp>
 
 #include "core/context.hpp"
 
@@ -10,17 +11,17 @@ void fpsLimiter(int maxFps, Uint32 startTick) {
 }
 
 int main(int argc, char* argv[]) {
-    enum GameState {
-        IN_GAME,
-        MAIN_MENU,
-        SETTINGS
-    };
-
-    Context* context = new Context();
-    Game* game = new Game();
-
     const int MAX_FPS = 60;  // TODO: get from file
 
+    Context* context = new Context();
+
+    // screens
+    Game* game = new Game();
+    MainMenu* mainMenu = new MainMenu();
+
+    // manage which screen to show
+    enum GameState { IN_GAME, MAIN_MENU, SETTINGS };
+    GameState currentState = GameState::IN_GAME;
     Screen* currentScreen = game;
 
     SDL_Event event;
@@ -29,9 +30,28 @@ int main(int argc, char* argv[]) {
     while (isRunning) {
         Uint32 startTick = SDL_GetTicks();
 
+        // show the right screen based on the state
+        switch (currentState) {
+            case IN_GAME:
+                if (game->isSnakeAlive()) {
+                    currentScreen = game;
+                } else {
+                    currentState = GameState::MAIN_MENU;
+                    currentScreen = mainMenu;
+                }
+                break;
+            case MAIN_MENU:
+                currentScreen = mainMenu;
+                break;
+            case SETTINGS:
+                // currentScreen = settingsScreen;
+                break;
+        }
+
         // handle events
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
+                SDL_Log("Close game");
                 isRunning = false;
                 break;
             }
