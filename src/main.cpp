@@ -2,8 +2,6 @@
 #include <screens/game.hpp>
 #include <screens/main_menu.hpp>
 
-#include "core/context.hpp"
-
 void fpsLimiter(int maxFps, Uint32 startTick) {
     if (1000 / maxFps > SDL_GetTicks() - startTick) {
         SDL_Delay(1000 / maxFps - (SDL_GetTicks() - startTick));
@@ -12,8 +10,6 @@ void fpsLimiter(int maxFps, Uint32 startTick) {
 
 int main(int argc, char* argv[]) {
     const int MAX_FPS = 60;  // TODO: get from file
-
-    Context* context = new Context();
 
     // screens
     Game* game = new Game();
@@ -64,17 +60,17 @@ int main(int argc, char* argv[]) {
         currentScreen->update();
 
         // render screen
-        SDL_SetRenderDrawColor((*context).renderer, 0, 0, 0, 255);
-        SDL_RenderClear((*context).renderer);
-        currentScreen->render(*context);
-        SDL_RenderPresent((*context).renderer);
+        SDL_SetRenderDrawColor(currentScreen->getRenderer(), 0, 0, 0, 255);
+        SDL_RenderClear(currentScreen->getRenderer());
+        currentScreen->render();
+        SDL_RenderPresent(currentScreen->getRenderer());
 
         // cap the frame rate
         fpsLimiter(MAX_FPS, startTick);
     }
 
-    delete context;
     delete game;
+    delete mainMenu;
 
     return EXIT_SUCCESS;
 }

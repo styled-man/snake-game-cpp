@@ -1,18 +1,97 @@
 #include "core/screen.hpp"
 
+// Initialize the static member variables
+int Screen::instanceCount = 0;
+SDL_Window* Screen::window = nullptr;
+SDL_Renderer* Screen::renderer = nullptr;
+
+Screen::Screen() {
+    if (this->instanceCount == 0) {
+        SDL_Log("Starting setup procedure");
+
+        // initilize sdl
+        if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not initialize subsystems: %s", SDL_GetError());
+            return;
+        }
+        SDL_Log("Subsystems Initialized");
+
+        // create window
+        // TODO: get from file
+        this->window =
+            SDL_CreateWindow("Snake Game - cpp", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 740, 800, 0);
+        if (!this->window) {
+            SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not create window: %s", SDL_GetError());
+            return;
+        }
+        SDL_Log("Window created");
+
+        // create renderer
+        if (!(this->renderer = SDL_CreateRenderer(this->window, -1, 0))) {
+            SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not create renderer: %s", SDL_GetError());
+            return;
+        }
+        SDL_Log("Renderer created");
+
+        if (TTF_Init() == -1) {
+            SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not initilize fonts: %s", TTF_GetError());
+            return;
+        }
+        SDL_Log("Fonts Initialized");
+        SDL_Log("Setup procedure finished");
+    } else {
+        SDL_Log("Already ran setup procedure");
+    }
+
+    this->instanceCount++;
+}
+
 Screen::~Screen() {
+    if (instanceCount-- > 1) {
+        return;
+    }
+
+    SDL_Log("Cleaning up...");
+
+    SDL_DestroyWindow(this->window);
+    SDL_Log("Window destroyed");
+
+    SDL_DestroyRenderer(this->renderer);
+    SDL_Log("Renderer destroyed");
+
+    TTF_Quit();
+    SDL_Log("Fonts Deinitialize");
+
+    SDL_Quit();
+    SDL_Log("Clean up Done!");
+
     if (this->getFont()) {
         TTF_CloseFont(this->getFont());
+        SDL_Log("Fonts Closed");
     }
 }
 
+SDL_Renderer* Screen::getRenderer() const {
+    return this->renderer;
+}
+SDL_Window* Screen::getWindow() const {
+    return this->window;
+}
 bool Screen::setFont(std::string font, int size) {
+    // close old font
+    if (this->getFont()) {
+        TTF_CloseFont(this->getFont());
+    }
+
+    // get new font
     this->font = TTF_OpenFont(font.c_str(), size);
 
+    // check for error
     if (!this->getFont()) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to load font: %s", font.c_str());
         return false;
     }
+
     return true;
 }
 

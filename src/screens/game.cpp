@@ -100,31 +100,31 @@ void Game::update() {
     }
 }
 
-void Game::render(const Context& context) {
+void Game::render() {
     int windowWidth, windowHeight;
-    SDL_GetWindowSize(context.window, &windowWidth, &windowHeight);
+    SDL_GetWindowSize(this->getWindow(), &windowWidth, &windowHeight);
 
     int headerHeight = windowHeight - windowWidth, padding = 30;
 
     // header background
     SDL_Rect header = {0, 0, windowWidth, headerHeight};
-    SDL_SetRenderDrawColor(context.renderer, 84, 116, 54, 255);
-    SDL_RenderFillRect(context.renderer, &header);
+    SDL_SetRenderDrawColor(this->getRenderer(), 84, 116, 54, 255);
+    SDL_RenderFillRect(this->getRenderer(), &header);
 
     // score Text
     this->setFont("./assets/fonts/The Sunlight.otf", 40);
     this->renderText(
-        "Score: " + std::to_string(this->score), padding, headerHeight / 3, {255, 255, 255}, context.renderer);
+        "Score: " + std::to_string(this->score), padding, headerHeight / 3, {255, 255, 255}, this->getRenderer());
 
     // the background color of the game
     SDL_Rect background = {0, headerHeight, windowWidth, windowHeight - headerHeight};
-    SDL_SetRenderDrawColor(context.renderer, 98, 137, 64, 255);
-    SDL_RenderFillRect(context.renderer, &background);
+    SDL_SetRenderDrawColor(this->getRenderer(), 98, 137, 64, 255);
+    SDL_RenderFillRect(this->getRenderer(), &background);
 
     // the background color of the board
     SDL_Rect board = {padding, headerHeight + padding, windowWidth - (padding * 2), windowHeight - (headerHeight * 2)};
-    SDL_SetRenderDrawColor(context.renderer, 178, 216, 96, 255);
-    SDL_RenderFillRect(context.renderer, &board);
+    SDL_SetRenderDrawColor(this->getRenderer(), 178, 216, 96, 255);
+    SDL_RenderFillRect(this->getRenderer(), &board);
 
     int gridSizeWidth = (windowWidth - (padding * 2)) / this->gameBoardTotalCols;
     int gridSizeHeight = (windowHeight - (headerHeight + padding * 2)) / this->gameBoardTotalRows;
@@ -139,30 +139,30 @@ void Game::render(const Context& context) {
             if (this->fruit->isColliding(i, j)) {
                 SDL_Rect title = {
                     padding + i * (gridSize), headerHeight + padding + j * (gridSize), gridSize, gridSize};
-                SDL_SetRenderDrawColor(context.renderer, 255, 0, 0, 255);
-                SDL_RenderFillRect(context.renderer, &title);
+                SDL_SetRenderDrawColor(this->getRenderer(), 255, 0, 0, 255);
+                SDL_RenderFillRect(this->getRenderer(), &title);
             }
 
             // color the head of the snake differently
             else if (this->snake->getHead()[0] == i && this->snake->getHead()[1] == j) {
                 SDL_Rect snakeHeadSegment = {
                     padding + i * (gridSize), headerHeight + padding + j * (gridSize), gridSize, gridSize};
-                SDL_SetRenderDrawColor(context.renderer, 67, 96, 191, 255);
-                SDL_RenderFillRect(context.renderer, &snakeHeadSegment);
+                SDL_SetRenderDrawColor(this->getRenderer(), 67, 96, 191, 255);
+                SDL_RenderFillRect(this->getRenderer(), &snakeHeadSegment);
             }
 
             else if (this->snake->isColliding(i, j)) {
                 SDL_Rect snakeSegment = {
                     padding + i * (gridSize), headerHeight + padding + j * (gridSize), gridSize, gridSize};
-                SDL_SetRenderDrawColor(context.renderer, 81, 114, 224, 255);
-                SDL_RenderFillRect(context.renderer, &snakeSegment);
+                SDL_SetRenderDrawColor(this->getRenderer(), 81, 114, 224, 255);
+                SDL_RenderFillRect(this->getRenderer(), &snakeSegment);
             }
 
             else if (alternate) {
                 SDL_Rect title = {
                     padding + i * (gridSize), headerHeight + padding + j * (gridSize), gridSize, gridSize};
-                SDL_SetRenderDrawColor(context.renderer, 172, 208, 94, 255);
-                SDL_RenderFillRect(context.renderer, &title);
+                SDL_SetRenderDrawColor(this->getRenderer(), 172, 208, 94, 255);
+                SDL_RenderFillRect(this->getRenderer(), &title);
             }
         }
     }

@@ -27,5 +27,5 @@ public:
 
     void handleEvents(const SDL_Event &event) override;
     void update() override;
-    void render(const Context &context) override;
+    void render() override;
 };
