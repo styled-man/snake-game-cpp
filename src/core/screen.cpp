@@ -53,30 +53,32 @@ Screen::~Screen() {
 
     SDL_Log("Cleaning up...");
 
+    if (this->getFont()) {
+        TTF_CloseFont(this->getFont());
+        SDL_Log("Fonts Closed");
+    }
+
+    TTF_Quit();
+    SDL_Log("Fonts Deinitialize");
+
     SDL_DestroyWindow(this->window);
     SDL_Log("Window destroyed");
 
     SDL_DestroyRenderer(this->renderer);
     SDL_Log("Renderer destroyed");
 
-    TTF_Quit();
-    SDL_Log("Fonts Deinitialize");
-
     SDL_Quit();
     SDL_Log("Clean up Done!");
-
-    if (this->getFont()) {
-        TTF_CloseFont(this->getFont());
-        SDL_Log("Fonts Closed");
-    }
 }
 
 SDL_Renderer* Screen::getRenderer() const {
     return this->renderer;
 }
+
 SDL_Window* Screen::getWindow() const {
     return this->window;
 }
+
 bool Screen::setFont(std::string font, int size) {
     // close old font
     if (this->getFont()) {
@@ -109,4 +111,7 @@ void Screen::renderText(std::string str, int x, int y, SDL_Color color, SDL_Rend
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
     SDL_Rect rect = {x, y, surface->w, surface->h};
     SDL_RenderCopy(renderer, texture, NULL, &rect);
+
+    SDL_FreeSurface(surface);
+    SDL_DestroyTexture(texture);
 }

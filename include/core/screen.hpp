@@ -20,7 +20,7 @@ public:
     Screen();
     virtual ~Screen();
 
-    virtual void handleEvents(const SDL_Event& event) = 0;
+    virtual void handleEvents(SDL_Event& event) = 0;
     virtual void render() = 0;
     virtual void update() = 0;
 
@@ -29,4 +29,7 @@ public:
 
     SDL_Renderer* getRenderer() const;
     SDL_Window* getWindow() const;
+
+    enum State { IN_GAME, MAIN_MENU, SETTINGS, EXIT };
+    static State state;
 };

@@ -1,7 +1,5 @@
 #include "screens/game.hpp"
 
-#include <vector>
-
 Game::Game() {
     SDL_Log("Starting game...");
     this->gameBoardTotalCols = this->gameBoardTotalRows = 34;
@@ -24,7 +22,7 @@ Game::~Game() {
     delete this->fruit;
 }
 
-void Game::handleEvents(const SDL_Event& event) {
+void Game::handleEvents(SDL_Event& event) {
     if (event.type == SDL_KEYDOWN) {
         Snake::Direction newDirection;
 
@@ -68,8 +66,8 @@ void Game::update() {
     }
 
     this->interval++;
-    if (interval >= 60 / speed) {
-        interval = 0;
+    if (this->interval >= 60 / this->speed) {
+        this->interval = 0;
         this->snake->move();
 
         std::vector<std::array<int, 2>> snakeBody = this->snake->getBody();
@@ -78,7 +76,7 @@ void Game::update() {
         for (int i = 0; i < this->snake->getLength() - 1; i++) {
             if (this->snake->getHead()[0] == snakeBody[i][0] && this->snake->getHead()[1] == snakeBody[i][1]) {
                 SDL_Log("Snake collided with itself");
-                this->snakeAlive = false;
+                Screen::state = Screen::State::MAIN_MENU;
                 return;
             }
         }
@@ -121,49 +119,35 @@ void Game::render() {
     SDL_SetRenderDrawColor(this->getRenderer(), 98, 137, 64, 255);
     SDL_RenderFillRect(this->getRenderer(), &background);
 
-    // the background color of the board
-    SDL_Rect board = {padding, headerHeight + padding, windowWidth - (padding * 2), windowHeight - (headerHeight * 2)};
-    SDL_SetRenderDrawColor(this->getRenderer(), 178, 216, 96, 255);
-    SDL_RenderFillRect(this->getRenderer(), &board);
-
     int gridSizeWidth = (windowWidth - (padding * 2)) / this->gameBoardTotalCols;
     int gridSizeHeight = (windowHeight - (headerHeight + padding * 2)) / this->gameBoardTotalRows;
     int gridSize = std::min(gridSizeWidth, gridSizeHeight);
 
-    // render a checked board pattern on the gameboard
-    bool alternate = false;
     for (int i = 0; i < this->gameBoardTotalCols; i++) {
-        alternate = !alternate;
         for (int j = 0; j < this->gameBoardTotalRows; j++) {
-            alternate = !alternate;
+            // Determine the position and size for the current tile
+            SDL_Rect tile = {padding + i * gridSize, headerHeight + padding + j * gridSize, gridSize, gridSize};
+
+            // Set the color based on the game element at this position
             if (this->fruit->isColliding(i, j)) {
-                SDL_Rect title = {
-                    padding + i * (gridSize), headerHeight + padding + j * (gridSize), gridSize, gridSize};
+                // Fruit position - red
                 SDL_SetRenderDrawColor(this->getRenderer(), 255, 0, 0, 255);
-                SDL_RenderFillRect(this->getRenderer(), &title);
-            }
-
-            // color the head of the snake differently
-            else if (this->snake->getHead()[0] == i && this->snake->getHead()[1] == j) {
-                SDL_Rect snakeHeadSegment = {
-                    padding + i * (gridSize), headerHeight + padding + j * (gridSize), gridSize, gridSize};
+            } else if (this->snake->getHead()[0] == i && this->snake->getHead()[1] == j) {
+                // Snake's head - dark blue
                 SDL_SetRenderDrawColor(this->getRenderer(), 67, 96, 191, 255);
-                SDL_RenderFillRect(this->getRenderer(), &snakeHeadSegment);
-            }
-
-            else if (this->snake->isColliding(i, j)) {
-                SDL_Rect snakeSegment = {
-                    padding + i * (gridSize), headerHeight + padding + j * (gridSize), gridSize, gridSize};
+            } else if (this->snake->isColliding(i, j)) {
+                // Snake body - lighter blue
                 SDL_SetRenderDrawColor(this->getRenderer(), 81, 114, 224, 255);
-                SDL_RenderFillRect(this->getRenderer(), &snakeSegment);
+            } else if ((i + j) % 2 == 0) {
+                // Checkered pattern - light green
+                SDL_SetRenderDrawColor(this->getRenderer(), 172, 208, 94, 255);
+            } else {
+                // Checkered pattern - dark green
+                SDL_SetRenderDrawColor(this->getRenderer(), 178, 216, 96, 255);
             }
 
-            else if (alternate) {
-                SDL_Rect title = {
-                    padding + i * (gridSize), headerHeight + padding + j * (gridSize), gridSize, gridSize};
-                SDL_SetRenderDrawColor(this->getRenderer(), 172, 208, 94, 255);
-                SDL_RenderFillRect(this->getRenderer(), &title);
-            }
+            // Render the tile
+            SDL_RenderFillRect(this->getRenderer(), &tile);
         }
     }
 }

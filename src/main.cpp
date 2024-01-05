@@ -8,39 +8,34 @@ void fpsLimiter(int maxFps, Uint32 startTick) {
     }
 }
 
+// initial screen to show
+Screen::State Screen::state = Screen::State::MAIN_MENU;
+
 int main(int argc, char* argv[]) {
     const int MAX_FPS = 60;  // TODO: get from file
 
     // screens
+    Screen* screen = nullptr;
     Game* game = new Game();
     MainMenu* mainMenu = new MainMenu();
 
-    // manage which screen to show
-    enum GameState { IN_GAME, MAIN_MENU, SETTINGS };
-    GameState currentState = GameState::IN_GAME;
-    Screen* currentScreen = game;
-
     SDL_Event event;
-    bool isRunning = true;
 
-    while (isRunning) {
+    while (Screen::state != Screen::State::EXIT) {
         Uint32 startTick = SDL_GetTicks();
 
         // show the right screen based on the state
-        switch (currentState) {
-            case IN_GAME:
-                if (game->isSnakeAlive()) {
-                    currentScreen = game;
-                } else {
-                    currentState = GameState::MAIN_MENU;
-                    currentScreen = mainMenu;
-                }
+        switch (Screen::state) {
+            case Screen::State::IN_GAME:
+                screen = game;
                 break;
-            case MAIN_MENU:
-                currentScreen = mainMenu;
+            case Screen::State::MAIN_MENU:
+                screen = mainMenu;
                 break;
-            case SETTINGS:
+            case Screen::State::SETTINGS:
                 // currentScreen = settingsScreen;
+                break;
+            default:
                 break;
         }
 
@@ -48,22 +43,22 @@ int main(int argc, char* argv[]) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 SDL_Log("Close game");
-                isRunning = false;
+                screen->state = Screen::State::EXIT;
                 break;
             }
 
             // Pass the event to the current screen for handling
-            currentScreen->handleEvents(event);
+            screen->handleEvents(event);
         }
 
         // screen logic
-        currentScreen->update();
+        screen->update();
 
         // render screen
-        SDL_SetRenderDrawColor(currentScreen->getRenderer(), 0, 0, 0, 255);
-        SDL_RenderClear(currentScreen->getRenderer());
-        currentScreen->render();
-        SDL_RenderPresent(currentScreen->getRenderer());
+        SDL_SetRenderDrawColor(screen->getRenderer(), 0, 0, 0, 255);
+        SDL_RenderClear(screen->getRenderer());
+        screen->render();
+        SDL_RenderPresent(screen->getRenderer());
 
         // cap the frame rate
         fpsLimiter(MAX_FPS, startTick);

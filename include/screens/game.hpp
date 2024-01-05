@@ -1,7 +1,5 @@
 #pragma once
 
-#include <SDL.h>
-
 #include "core/screen.hpp"
 #include "entities/fruit.hpp"
 #include "entities/snake.hpp"
@@ -25,7 +23,7 @@ public:
     bool isSnakeAlive() const;
     bool isPaused() const;
 
-    void handleEvents(const SDL_Event &event) override;
+    void handleEvents(SDL_Event &event) override;
     void update() override;
     void render() override;
 };
