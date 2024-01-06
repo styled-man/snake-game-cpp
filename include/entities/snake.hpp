@@ -8,7 +8,7 @@ public:
     Snake(int maxX, int maxY);
     ~Snake();
 
-    enum Direction { UP, DOWN, LEFT, RIGHT };
+    enum Direction { UP, DOWN, LEFT, RIGHT, NONE };
 
     void grow();
     void move();

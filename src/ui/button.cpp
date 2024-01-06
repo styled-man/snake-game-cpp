@@ -1,9 +1,12 @@
-#include "ui/Button.hpp"
+#include "ui/button.hpp"
 
 Button::Button(std::string text, int x, int y, TTF_Font* font, SDL_Color color) {
     this->name = text;
     this->surface = TTF_RenderText_Solid(font, text.c_str(), color);
     this->button = {x, y, surface->w, surface->h};
+
+    // by default make each button visible
+    this->isVisible = true;
 }
 
 Button::~Button() {
@@ -22,6 +25,8 @@ void Button::toggle() {
 }
 
 void Button::handleEvents(SDL_Event& event) {
+    if (!this->isVisible) return;
+
     // Get mouse position
     int mouseX, mouseY;
     SDL_GetMouseState(&mouseX, &mouseY);

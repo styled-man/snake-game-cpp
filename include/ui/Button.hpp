@@ -1,3 +1,5 @@
+#pragma once
+
 #include <SDL.h>
 #include <SDL_ttf.h>
 
@@ -14,6 +16,8 @@ private:
 public:
     Button(std::string text, int x, int y, TTF_Font* font, SDL_Color color);
     ~Button();
+
+    bool isVisible;
 
     void toggle();
     void handleEvents(SDL_Event& event);

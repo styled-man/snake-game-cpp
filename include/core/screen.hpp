@@ -14,7 +14,7 @@ private:
     TTF_Font* font;
 
 protected:
-    void renderText(std::string str, int x, int y, SDL_Color color, SDL_Renderer* renderer);
+    void renderText(std::string str, int x, int y, SDL_Color color);
 
 public:
     Screen();

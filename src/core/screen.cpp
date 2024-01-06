@@ -101,14 +101,14 @@ TTF_Font* Screen::getFont() const {
     return this->font;
 }
 
-void Screen::renderText(std::string str, int x, int y, SDL_Color color, SDL_Renderer* renderer) {
+void Screen::renderText(std::string str, int x, int y, SDL_Color color) {
     if (!this->getFont()) {
         SDL_LogError(SDL_LOG_CATEGORY_ERROR, "No fonts set");
         return;
     }
 
     SDL_Surface* surface = TTF_RenderText_Solid(this->getFont(), str.c_str(), color);
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(this->renderer, surface);
     SDL_Rect rect = {x, y, surface->w, surface->h};
     SDL_RenderCopy(renderer, texture, NULL, &rect);
 

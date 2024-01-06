@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/screen.hpp"
-#include "ui/Button.hpp"
+#include "ui/button.hpp"
 
 class MainMenu : public Screen {
 private:

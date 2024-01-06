@@ -1,20 +1,43 @@
 #include "screens/game.hpp"
 
 Game::Game() {
-    SDL_Log("Starting game...");
+    SDL_Log("Initializing game...");
+
     this->gameBoardTotalCols = this->gameBoardTotalRows = 34;
+    this->reset();
+
+    int windowWidth, windowHeight;
+    int textWidth, textHeight;
+    SDL_GetWindowSize(this->getWindow(), &windowWidth, &windowHeight);
+
+    std::string text = "New Game";
+    this->setFont("./assets/fonts/ArcadeClassic.ttf", 40);
+    TTF_SizeText(this->getFont(), text.c_str(), &textWidth, &textHeight);
+    this->newGameButton = new Button(
+        text, (windowWidth - textWidth) / 2, (windowHeight - textHeight + 400) / 2, this->getFont(), {255, 255, 255});
+
+    text = "Main Menu";
+    TTF_SizeText(this->getFont(), text.c_str(), &textWidth, &textHeight);
+    this->mainMenuButton = new Button(
+        text, (windowWidth - textWidth) / 2, (windowHeight - textHeight + 500) / 2, this->getFont(), {255, 255, 255});
+
+    SDL_Log("Game Initialized!");
+}
+
+void Game::reset() {
+    if (this->snake) delete this->snake;
+    if (this->fruit) delete this->fruit;
 
     this->snake = new Snake(this->gameBoardTotalCols, this->gameBoardTotalRows);
     this->fruit = new Fruit(this->gameBoardTotalCols, this->gameBoardTotalRows);
 
-    this->snakeAlive = true;
+    this->isSnakeAlive = true;
+    this->hasStarted = false;
+    this->isPaused = false;
 
-    this->paused = false;
-    this->speed = 9;  // TODO: get from file
+    this->speed = 12;  // TODO: get from file
     this->score = 0;
     this->interval = 0;
-
-    SDL_Log("Game Started!");
 }
 
 Game::~Game() {
@@ -24,13 +47,15 @@ Game::~Game() {
 
 void Game::handleEvents(SDL_Event& event) {
     if (event.type == SDL_KEYDOWN) {
-        Snake::Direction newDirection;
+        Snake::Direction newDirection = Snake::Direction::NONE;
 
         switch (event.key.keysym.scancode) {
             case SDL_SCANCODE_ESCAPE:
-                this->paused = !this->paused;
-                SDL_Log("Game state: %s", (this->paused ? "paused" : "not paused"));
-                break;
+                if (this->isSnakeAlive && this->hasStarted) {
+                    this->isPaused = !this->isPaused;
+                    SDL_Log("Game state: %s", (this->isPaused ? "paused" : "not paused"));
+                }
+                return;
 
             case SDL_SCANCODE_UP:
                 newDirection = Snake::Direction::UP;
@@ -49,53 +74,91 @@ void Game::handleEvents(SDL_Event& event) {
                 break;
 
             default:
-                break;
+                return;
         }
 
         Snake::Direction oldDirection = this->snake->getDirection();
 
-        if (!this->paused && this->snake->setDirection(newDirection)) {
+        if (!this->hasStarted && this->isSnakeAlive) {
+            // start the game whenever one of the arrow keys is pressed
+            this->hasStarted = true;
+        }
+
+        // if the game is not paused and the user changes the direction of the snake
+        if (!this->isPaused && this->snake->setDirection(newDirection)) {
             SDL_Log("Snake direction changed - old: %d, new: %d", oldDirection, this->snake->getDirection());
+        }
+    }
+
+    this->mainMenuButton->handleEvents(event);
+    this->newGameButton->handleEvents(event);
+}
+
+void Game::update() {
+    this->newGameButton->isVisible = false;
+    this->mainMenuButton->isVisible = false;
+
+    // new game and main menu button logic
+    if (this->hasStarted && (this->isPaused || !this->isSnakeAlive)) {
+        this->newGameButton->isVisible = true;
+        this->mainMenuButton->isVisible = true;
+
+        if (this->newGameButton->isClicked()) {
+            this->newGameButton->toggle();
+            this->reset();
+            this->hasStarted = true;
+        }
+
+        else if (this->mainMenuButton->isClicked()) {
+            this->mainMenuButton->toggle();
+            this->isPaused = false;
+            Game::state = Game::State::MAIN_MENU;
+        }
+    }
+
+    else if (this->hasStarted && !this->isPaused && this->isSnakeAlive) {
+        this->interval++;
+        if (this->interval >= 60 / this->speed) {
+            this->interval = 0;
+            this->snake->move();
+
+            std::vector<std::array<int, 2>> snakeBody = this->snake->getBody();
+
+            // if the snake is touching it self
+            for (int i = 0; i < this->snake->getLength() - 1; i++) {
+                if (this->snake->getHead()[0] == snakeBody[i][0] && this->snake->getHead()[1] == snakeBody[i][1]) {
+                    SDL_Log("Game Over - Snake collided with itself");
+                    this->isSnakeAlive = false;
+                    return;
+                }
+            }
+
+            // if the snake is touch the fruit
+            if (this->fruit->isColliding(this->snake->getHead()[0], this->snake->getHead()[1])) {
+                this->score++;
+                this->snake->grow();
+
+                // ensure that the fruit does not spawn in the middle of the snake
+                std::array<int, 2> fruitPos = this->fruit->getPosition();
+                while (this->snake->isColliding(fruitPos[0], fruitPos[1])) {
+                    this->fruit->changePosition();
+                    fruitPos = this->fruit->getPosition();
+                }
+
+                SDL_Log("Snake eats fruit - score: %d", score);
+            }
         }
     }
 }
 
-void Game::update() {
-    if (this->paused) {
-        return;
-    }
+void Game::renderOverlay() {
+    int windowWidth, windowHeight;
+    SDL_GetWindowSize(this->getWindow(), &windowWidth, &windowHeight);
 
-    this->interval++;
-    if (this->interval >= 60 / this->speed) {
-        this->interval = 0;
-        this->snake->move();
-
-        std::vector<std::array<int, 2>> snakeBody = this->snake->getBody();
-
-        // if the snake is touching it self
-        for (int i = 0; i < this->snake->getLength() - 1; i++) {
-            if (this->snake->getHead()[0] == snakeBody[i][0] && this->snake->getHead()[1] == snakeBody[i][1]) {
-                SDL_Log("Snake collided with itself");
-                Screen::state = Screen::State::MAIN_MENU;
-                return;
-            }
-        }
-
-        // if the snake is touch the fruit
-        if (this->fruit->isColliding(this->snake->getHead()[0], this->snake->getHead()[1])) {
-            this->score++;
-            this->snake->grow();
-
-            // ensure that the fruit does not spawn in the middle of the snake
-            std::array<int, 2> fruitPos = this->fruit->getPosition();
-            while (this->snake->isColliding(fruitPos[0], fruitPos[1])) {
-                this->fruit->changePosition();
-                fruitPos = this->fruit->getPosition();
-            }
-
-            SDL_Log("Snake eats fruit - score: %d", score);
-        }
-    }
+    SDL_SetRenderDrawColor(this->getRenderer(), 0, 0, 0, 150);
+    SDL_SetRenderDrawBlendMode(this->getRenderer(), SDL_BLENDMODE_BLEND);
+    SDL_Rect overlay = {0, 0, windowWidth, windowHeight};
+    SDL_RenderFillRect(this->getRenderer(), &overlay);
 }
 
 void Game::render() {
@@ -111,8 +174,7 @@ void Game::render() {
 
     // score Text
     this->setFont("./assets/fonts/The Sunlight.otf", 40);
-    this->renderText(
-        "Score: " + std::to_string(this->score), padding, headerHeight / 3, {255, 255, 255}, this->getRenderer());
+    this->renderText("Score: " + std::to_string(this->score), padding, headerHeight / 3, {255, 255, 255});
 
     // the background color of the game
     SDL_Rect background = {0, headerHeight, windowWidth, windowHeight - headerHeight};
@@ -150,13 +212,46 @@ void Game::render() {
             SDL_RenderFillRect(this->getRenderer(), &tile);
         }
     }
-}
 
-// getters/setters
-bool Game::isSnakeAlive() const {
-    return this->snakeAlive;
-}
+    // game did not start
+    if (!this->hasStarted && this->isSnakeAlive) {
+        this->renderOverlay();
+        int textWidth, textHeight;
 
-bool Game::isPaused() const {
-    return this->paused;
+        std::string text = "Press an arrow key to start";
+        TTF_SizeText(this->getFont(), text.c_str(), &textWidth, &textHeight);
+        this->renderText(text, (windowWidth - textWidth) / 2, (windowHeight - textHeight) / 2, {255, 255, 255});
+    }
+
+    // game is paused
+    else if (this->isPaused) {
+        this->renderOverlay();
+        int textWidth, textHeight;
+
+        std::string text = "Press an arrow key to resume";
+        TTF_SizeText(this->getFont(), text.c_str(), &textWidth, &textHeight);
+        this->renderText(text, (windowWidth - textWidth) / 2, (windowHeight - textHeight) / 2, {255, 255, 255});
+
+        text = "Paused";
+        this->setFont("./assets/fonts/ArcadeClassic.ttf", 100);
+        TTF_SizeText(this->getFont(), text.c_str(), &textWidth, &textHeight);
+        this->renderText(text, (windowWidth - textWidth) / 2, (windowHeight - textHeight - 100) / 2, {255, 255, 255});
+
+        this->newGameButton->render(this->getRenderer());
+        this->mainMenuButton->render(this->getRenderer());
+    }
+
+    // gameover
+    else if (this->hasStarted && !this->isSnakeAlive) {
+        this->renderOverlay();
+        int textWidth, textHeight;
+
+        std::string text = "GameOver";
+        this->setFont("./assets/fonts/ArcadeClassic.ttf", 100);
+        TTF_SizeText(this->getFont(), text.c_str(), &textWidth, &textHeight);
+        this->renderText(text, (windowWidth - textWidth) / 2, (windowHeight - textHeight - 100) / 2, {255, 255, 255});
+
+        this->newGameButton->render(this->getRenderer());
+        this->mainMenuButton->render(this->getRenderer());
+    }
 }

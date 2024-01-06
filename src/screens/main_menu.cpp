@@ -65,7 +65,7 @@ void MainMenu::render() {
     // Main text
     TTF_SizeText(this->getFont(), "Snake Game", &textWidth, NULL);
     this->renderText(
-        "Snake Game", (windowWidth - textWidth) / 2, windowHeight / 2 - 100, {255, 255, 255}, this->getRenderer());
+        "Snake Game", (windowWidth - textWidth) / 2, windowHeight / 2 - 100, {255, 255, 255});
 
     // buttons
     this->startGameButton->render(this->getRenderer());
