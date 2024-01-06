@@ -43,6 +43,9 @@ void Game::reset() {
 Game::~Game() {
     delete this->snake;
     delete this->fruit;
+
+    delete this->newGameButton;
+    delete this->mainMenuButton;
 }
 
 void Game::handleEvents(SDL_Event& event) {
