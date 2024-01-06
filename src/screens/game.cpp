@@ -98,20 +98,23 @@ void Game::handleEvents(SDL_Event& event) {
 }
 
 void Game::update() {
+    // Initially hide the buttons
     this->newGameButton->isVisible = false;
     this->mainMenuButton->isVisible = false;
 
-    // new game and main menu button logic
+    // Handle button visibility and interactions
     if (this->hasStarted && (this->isPaused || !this->isSnakeAlive)) {
         this->newGameButton->isVisible = true;
         this->mainMenuButton->isVisible = true;
 
+        // Handle new game button click
         if (this->newGameButton->isClicked()) {
             this->newGameButton->toggle();
             this->reset();
             this->hasStarted = true;
         }
 
+        // Handle main menu button click
         else if (this->mainMenuButton->isClicked()) {
             this->mainMenuButton->toggle();
             this->isPaused = false;
@@ -119,6 +122,7 @@ void Game::update() {
         }
     }
 
+    // Handle game logic when it's not paused or game is not over
     else if (this->hasStarted && !this->isPaused && this->isSnakeAlive) {
         this->interval++;
         if (this->interval >= 60 / this->speed) {
